@@ -7,7 +7,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 const { width } = Dimensions.get('window');
 
 export default function StatsScreen() {
-  const { entries, totalDistance, averageKml, loading } = useMileage();
+  const { entries, totalDistance, averageKml, loading, currency } = useMileage();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -52,12 +52,12 @@ export default function StatsScreen() {
       <View style={styles.statsGrid}>
         <View style={[styles.statBox, { backgroundColor: cardBg }]}>
           <Text style={[styles.statLabel, { color: subtextColor }]}>Total Cost</Text>
-          <Text style={[styles.statValue, { color: textColor }]}>${totalCost.toLocaleString()}</Text>
+          <Text style={[styles.statValue, { color: textColor }]}>{currency}{totalCost.toLocaleString()}</Text>
         </View>
         <View style={[styles.statBox, { backgroundColor: cardBg }]}>
           <Text style={[styles.statLabel, { color: subtextColor }]}>Avg Cost/KM</Text>
           <Text style={[styles.statValue, { color: textColor }]}>
-            ${totalDistance > 0 ? (totalCost / totalDistance).toFixed(2) : '0.00'}
+            {currency}{totalDistance > 0 ? (totalCost / totalDistance).toFixed(2) : '0.00'}
           </Text>
         </View>
       </View>

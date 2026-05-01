@@ -7,7 +7,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { entries, totalDistance, loading } = useMileage();
+  const { entries, totalDistance, loading, currency } = useMileage();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -62,7 +62,12 @@ export default function HomeScreen() {
           </View>
         ) : (
           recentEntries.map((item) => (
-            <View key={item.id} style={[styles.entryCard, { backgroundColor: cardBg }]}>
+            <TouchableOpacity 
+              key={item.id} 
+              style={[styles.entryCard, { backgroundColor: cardBg }]}
+              onPress={() => router.push(`/add-entry?id=${item.id}`)}
+              activeOpacity={0.7}
+            >
               <View style={styles.entryMain}>
                 <Text style={[styles.entryOdo, { color: textColor }]}>{item.odometer.toLocaleString()} km</Text>
                 <Text style={[styles.entryDate, { color: subtextColor }]}>
@@ -71,9 +76,9 @@ export default function HomeScreen() {
               </View>
               <View style={styles.entrySide}>
                 <Text style={styles.entryFuel}>+{item.fuelAdded}L</Text>
-                <Text style={[styles.entryCost, { color: subtextColor }]}>${item.fuelCost}</Text>
+                <Text style={[styles.entryCost, { color: subtextColor }]}>{currency}{item.fuelCost}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           ))
         )}
       </ScrollView>

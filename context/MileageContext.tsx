@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface MileageEntry {
@@ -12,9 +13,16 @@ export interface MileageEntry {
 interface MileageContextType {
   entries: MileageEntry[];
   addEntry: (odometer: number, fuelAdded: number, fuelCost: number) => Promise<void>;
+  updateEntry: (id: string, odometer: number, fuelAdded: number, fuelCost: number) => Promise<void>;
+  deleteEntry: (id: string) => Promise<void>;
   totalDistance: number;
   averageKml: number;
   loading: boolean;
+  currency: string;
+  updateCurrency: (symbol: string) => Promise<void>;
+  themeMode: 'system' | 'light' | 'dark';
+  setThemeMode: (mode: 'system' | 'light' | 'dark') => Promise<void>;
+  colorScheme: 'light' | 'dark';
 }
 
 const MileageContext = createContext<MileageContextType | undefined>(undefined);
@@ -22,8 +30,14 @@ const MileageContext = createContext<MileageContextType | undefined>(undefined);
 const STORAGE_KEY = '@mileage_entries';
 
 export function MileageProvider({ children }: { children: ReactNode }) {
+  const nativeColorScheme = useColorScheme() ?? 'light';
   const [entries, setEntries] = useState<MileageEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currency, setCurrency] = useState('$');
+  const [themeMode, setThemeModeState] = useState<'system'|'light'|'dark'>('system');
+
+  const SETTINGS_KEY = '@mileage_settings';
+  const THEME_KEY = '@mileage_theme';
 
   useEffect(() => {
     loadEntries();
@@ -35,12 +49,40 @@ export function MileageProvider({ children }: { children: ReactNode }) {
       if (savedEntries) {
         setEntries(JSON.parse(savedEntries));
       }
+      const savedCurrency = await AsyncStorage.getItem(SETTINGS_KEY);
+      if (savedCurrency) {
+        setCurrency(savedCurrency);
+      }
+      const savedTheme = await AsyncStorage.getItem(THEME_KEY);
+      if (savedTheme) {
+        setThemeModeState(savedTheme as any);
+      }
     } catch (e) {
       console.error('Failed to load entries', e);
     } finally {
       setLoading(false);
     }
   };
+
+  const updateCurrency = async (symbol: string) => {
+    setCurrency(symbol);
+    try {
+      await AsyncStorage.setItem(SETTINGS_KEY, symbol);
+    } catch (e) {
+      console.error('Failed to save currency', e);
+    }
+  };
+
+  const setThemeMode = async (mode: 'system' | 'light' | 'dark') => {
+    setThemeModeState(mode);
+    try {
+      await AsyncStorage.setItem(THEME_KEY, mode);
+    } catch (e) {
+      console.error('Failed to save theme', e);
+    }
+  };
+
+  const colorScheme = themeMode === 'system' ? nativeColorScheme : themeMode;
 
   const saveEntries = async (newEntries: MileageEntry[]) => {
     try {
@@ -59,6 +101,21 @@ export function MileageProvider({ children }: { children: ReactNode }) {
       fuelCost,
     };
     const updatedEntries = [newEntry, ...entries].sort((a, b) => b.odometer - a.odometer);
+    setEntries(updatedEntries);
+    await saveEntries(updatedEntries);
+  };
+
+  const updateEntry = async (id: string, odometer: number, fuelAdded: number, fuelCost: number) => {
+    const updatedEntries = entries.map(entry => 
+      entry.id === id ? { ...entry, odometer, fuelAdded, fuelCost } : entry
+    ).sort((a, b) => b.odometer - a.odometer);
+    
+    setEntries(updatedEntries);
+    await saveEntries(updatedEntries);
+  };
+
+  const deleteEntry = async (id: string) => {
+    const updatedEntries = entries.filter(entry => entry.id !== id);
     setEntries(updatedEntries);
     await saveEntries(updatedEntries);
   };
@@ -89,9 +146,16 @@ export function MileageProvider({ children }: { children: ReactNode }) {
     <MileageContext.Provider value={{ 
       entries, 
       addEntry, 
+      updateEntry,
+      deleteEntry,
       totalDistance, 
       averageKml: calculateAverageKml(),
-      loading 
+      loading,
+      currency,
+      updateCurrency,
+      themeMode,
+      setThemeMode,
+      colorScheme
     }}>
       {children}
     </MileageContext.Provider>
