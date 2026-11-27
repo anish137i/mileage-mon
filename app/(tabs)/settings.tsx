@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, FlatList, Alert } from 'react-native';
-import { useMileage } from '../../context/MileageContext';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useState } from 'react';
+import { Alert, FlatList, Linking, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useMileage } from '../../context/MileageContext';
 
 const CURRENCIES = [
   { symbol: '$', name: 'US Dollar (USD)' },
@@ -37,6 +37,7 @@ export default function SettingsScreen() {
   const labelColor = isDark ? '#94A3B8' : '#64748B';
   const cardBg = isDark ? '#1E293B' : '#FFFFFF';
   const modalBg = isDark ? '#0F172A' : '#F8FAFC';
+  const footerTextColor = isDark ? '#9BA1A6' : '#687076';
 
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}>
@@ -130,6 +131,15 @@ export default function SettingsScreen() {
           </View>
         </View>
       </Modal>
+
+      <TouchableOpacity
+        onPress={() => Linking.openURL("https://anishmandal.in")}
+        style={styles.footer}
+      >
+        <Text style={[styles.footerText, { color: footerTextColor }]}>
+          Created by Anish Mandal
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -254,5 +264,15 @@ const styles = StyleSheet.create({
   currencyName: {
     fontSize: 16,
     fontWeight: '500',
+  },
+  footer: {
+    marginTop: 32,
+    alignItems: 'center',
+    paddingBottom: 16,
+  },
+  footerText: {
+    textAlign: 'center',
+    fontSize: 14,
+      
   },
 });
